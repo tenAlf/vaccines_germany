@@ -5,4 +5,4 @@ vaccinations administered on county level.
 
 
 ### References
-Robert Koch-Institut (2021): COVID-19-Impfungen in Deutschland, Berlin: Zenodo. DOI:10.5281/zenodo.5126652
+Robert Koch-Institut (2021): COVID-19-Impfungen in Deutschland, Berlin: Zenodo. DOI: 10.5281/zenodo.5126652

@@ -1,15 +1,9 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+# This is a Rstudio shiny app with the purpose to graphically show the number
+# of vaccines administered on a county level
 
 library(shiny)
 library(readr)
-library(dplyr)
+library(tidyverse)
 
 # Load Data ---------------------------------------------------------------
 
@@ -51,23 +45,16 @@ ui <- fluidPage(
                         choices = unique(vac_data$LandkreisId_Impfort)),
             
             checkboxGroupInput("vac_group", 
-                               label = strong("Impfkategorie"),
+                               label   = strong("Impfkategorie"),
                                choices = list(
                                    "Erstimpfung"  = 1,
                                    "Zweitimpfung" = 2,
-                                   "Drittimpfung" = 3)),
-            
-            checkboxGroupInput("age_group",
-                               label = "Altersgruppen",
-                               choices = list(
-                                   "12-17"     = 1,
-                                   "18-59"     = 2,
-                                   "60+"       = 3,
-                                   "unbekannt" = 0))
+                                   "Drittimpfung" = 3))
             ),
         
         mainPanel(
-            plotOutput("vac_plot"))
+            plotOutput("vac_plot"),
+            htmlOutput("total_vac"))
     )
 )
 
@@ -75,21 +62,35 @@ ui <- fluidPage(
 
 # Define server logic for displaying a cumulative plot --------------------
 server <- function(input, output) {
-
+        
     output$vac_plot <- renderPlot({
-        # keep selected county and selected Groups
+        # keep selected county and selected Groups    
         plot_df <- 
             vac_data %>% 
-            filter(LandkreisId_Impfort  == input$county_id,
-                   Impfschutz         %in% input$vac_group,
-                   Altersgruppe       %in% input$age_group) %>% 
-            # generate grouped cumsum based on checkboxInputs from ui.R
-            group_by(Impfschutz, Altersgruppe) %>% 
-            mutate(Gesamtimpfungen_seit_Beginn = cumsum(Anzahl)) 
-        # draw the graph 
-        ggplot(plot_dfmapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
-            geom_line(aes(color = Altersgruppe))
+            filter(LandkreisId_Impfort %in% input$county_id,
+                   Impfschutz          %in% input$vac_group) %>% 
+        # generate grouped cumsum based on checkboxInputs from ui.R
+            group_by(Impfdatum, Impfschutz) %>% 
+            summarise(Impfungen_am_Tag = sum(Anzahl), .groups = "drop") %>%
+            group_by(Impfschutz) %>% 
+            mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
         
+        # draw the graph 
+        ggplot(plot_df, mapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
+            geom_line(aes(color = Impfschutz))
+        
+    })
+        
+    output$total_vac <- renderUI({
+        # Print out the total number of admin. vaccines. 
+        cum_vac <- 
+            vac_data %>% 
+            filter(LandkreisId_Impfort %in% input$county_id,
+                   Impfschutz          %in% input$vac_group) %>%
+            mutate(kumulierte_Impfungen = cumsum(Anzahl))
+        
+        HTML(paste(strong("Insgesamt verabreichte Impfungen: "),
+              max(cum_vac$kumulierte_Impfungen)))
     })
 }
 

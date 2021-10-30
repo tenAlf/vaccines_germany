@@ -66,4 +66,36 @@ grouped_vac_data_by_dose %>%
   ggplot(mapping = aes(x = Impfdatum, y = Gesamtimpfungen_seit_Beginn)) +
     geom_line(mapping = aes(color = Impfschutz))
 
+test <- list(
+  "county_id" = "05314",
+  "vac_group" = list(
+    "Erstimpfung"  = 1,
+    "Zweitimpfung" = 2,
+    "Drittimpfung" = 3),
+  "age_group" = list(
+    ),
+  "test_id" = 05314)
 
+test$test_id <- 
+  as.character(test$test_id)
+
+str(test)
+t <-
+  vac_data %>% 
+  filter(LandkreisId_Impfort %in% test$county_id,
+         Impfschutz          %in% test$vac_group) %>% 
+  # generate grouped cumsum based on checkboxInputs from ui.R
+  group_by(Impfdatum, Impfschutz) %>% 
+  summarise(Impfungen_am_Tag = sum(Anzahl), .groups = "drop") %>%
+  group_by(Impfschutz) %>% 
+  mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
+# draw the graph 
+ggplot(t, mapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
+  geom_line(aes(color = Impfschutz ))
+
+tt <- 
+  vac_data %>% 
+  filter(LandkreisId_Impfort %in% test$county_id,
+         Impfschutz          %in% test$vac_group) %>% 
+  mutate(kumulierte_Impfungen = cumsum(Anzahl))
+max(tt$kumulierte_Impfungen)

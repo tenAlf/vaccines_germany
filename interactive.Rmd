@@ -1,0 +1,18 @@
+---
+title: "Interaktives Rmd-Dokument"
+author: "Alfred Jankowski"
+date: "30-10-2021"
+output: html_document
+runtime: shiny
+---
+
+
+```{r tabsets, echo=FALSE, message=FALSE}
+shinyAppDir("vaccinations/",
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
+
+

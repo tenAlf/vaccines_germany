@@ -5,30 +5,9 @@ library(shiny)
 library(readr)
 library(tidyverse)
 
-# Load Data ---------------------------------------------------------------
+# Get Data ----------------------------------------------------------------
 
-data_url <- 
-    paste0("https://raw.githubusercontent.com",
-           "/robert-koch-institut/COVID-19-Impfungen_in_Deutschland",
-           "/master/Aktuell_Deutschland_Landkreise_COVID-19-Impfungen.csv")
-
-vac_data <-
-    read_csv(
-        data_url,
-        col_types = cols(
-            "Impfdatum"           = col_date(),
-            "LandkreisId_Impfort" = col_factor(),
-            "Altersgruppe"        = col_factor(),
-            "Impfschutz"          = col_factor(),
-            "Anzahl"              = col_integer()
-        )
-    )
-
-vac_data <- # Make sure the table is correctly sorted
-    vac_data %>% 
-    arrange(LandkreisId_Impfort, Impfdatum) 
-
-
+source("data_prep.R")
 
 # Define UI for county selection and group variables ----------------------
 

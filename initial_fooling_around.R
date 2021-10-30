@@ -41,10 +41,10 @@ grouped_vac_data_by_dose <-
   mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
 
 # instead of creating different tables, extend with new columns
-#vac_data %>% 
-#  arrange(LandkreisId_Impfort, Impfdatum)
-  
-  
+z <- list(
+  "12-17"     )
+
+vac_data %>% filter(Altersgruppe %in% z)
 
 # Visualization -----------------------------------------------------------
 
@@ -65,4 +65,5 @@ grouped_vac_data_by_dose %>%
   filter(LandkreisId_Impfort == selected_county) %>% 
   ggplot(mapping = aes(x = Impfdatum, y = Gesamtimpfungen_seit_Beginn)) +
     geom_line(mapping = aes(color = Impfschutz))
+
 

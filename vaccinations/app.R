@@ -30,8 +30,14 @@ vac_data <-
         )
     )
 
+vac_data <- # Make sure the table is correctly sorted
+    vac_data %>% 
+    arrange(LandkreisId_Impfort, Impfdatum) 
 
-# Define UI for application that draws a histogram
+
+
+# Define UI for county selection and group variables ----------------------
+
 ui <- fluidPage(
 
     # Application title
@@ -47,28 +53,43 @@ ui <- fluidPage(
             checkboxGroupInput("vac_group", 
                                label = strong("Impfkategorie"),
                                choices = list(
-                                   "Erstimpfung" = 1,
+                                   "Erstimpfung"  = 1,
                                    "Zweitimpfung" = 2,
                                    "Drittimpfung" = 3)),
+            
             checkboxGroupInput("age_group",
                                label = "Altersgruppen",
-                               choices = unique(vac_data$Altersgruppe))
-        ),
+                               choices = list(
+                                   "12-17"     = 1,
+                                   "18-59"     = 2,
+                                   "60+"       = 3,
+                                   "unbekannt" = 0))
+            ),
+        
         mainPanel(
-            plotOutput("distPlot")
+            plotOutput("vac_plot"))
     )
 )
-)
-# Define server logic required to draw a histogram
+
+
+
+# Define server logic for displaying a cumulative plot --------------------
 server <- function(input, output) {
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    output$vac_plot <- renderPlot({
+        # keep selected county and selected Groups
+        plot_df <- 
+            vac_data %>% 
+            filter(LandkreisId_Impfort  == input$county_id,
+                   Impfschutz         %in% input$vac_group,
+                   Altersgruppe       %in% input$age_group) %>% 
+            # generate grouped cumsum based on checkboxInputs from ui.R
+            group_by(Impfschutz, Altersgruppe) %>% 
+            mutate(Gesamtimpfungen_seit_Beginn = cumsum(Anzahl)) 
+        # draw the graph 
+        ggplot(plot_dfmapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
+            geom_line(aes(color = Altersgruppe))
+        
     })
 }
 

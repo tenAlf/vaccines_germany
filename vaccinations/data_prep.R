@@ -27,14 +27,14 @@ vac_data <- # Make sure the table is correctly sorted
   arrange(LandkreisId_Impfort, Impfdatum) 
 
 # load the county-id information aquiered from regionalstatistik.de
-
+suppressMessages(
 ags_data <- 
   read_csv2("ext_data/ags.csv", 
             locale = locale("de", encoding = "ISO-8859-1"), 
             skip = 6,
             col_names = c("date", "county_id", "county", "size"),
             show_col_types = FALSE)
-
+)
 # The following throws a warning due to the very last rows being filled with
 # arbitrary information that doesn't concern us
 suppressWarnings(

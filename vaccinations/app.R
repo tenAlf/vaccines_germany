@@ -14,7 +14,7 @@ source("data_prep.R")
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Verabreichte Impfungen"),
+    titlePanel("Verabreichte Impfungen 2021"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
@@ -55,8 +55,21 @@ server <- function(input, output) {
             mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
         
         # draw the graph 
+        custom_labs <- c("1" = "Erstimpfung", 
+                         "2" = "Zweitimpfung", 
+                         "3" = "Drittimpfung")
+        custom_cols <- c("1" = "#D81B60", 
+                         "2" = "#FFC107", 
+                         "3" = "#1E88E5")
+        
         ggplot(plot_df, mapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
-            geom_line(aes(color = Impfschutz))
+            geom_line(aes(color = Impfschutz)) +
+            scale_color_manual(values = custom_cols, labels = custom_labs) +
+            labs(x = "Datum", y = "Gesamtimpfungen seit Beginn") +
+            scale_y_continuous(
+                labels   = function(x) format(x, scientific = FALSE),
+                n.breaks = 5) +
+            scale_x_date(date_breaks = "1 month", date_labels = "%b")
         
     })
         
@@ -67,9 +80,10 @@ server <- function(input, output) {
             filter(LandkreisId_Impfort %in% input$county_id,
                    Impfschutz          %in% input$vac_group) %>%
             mutate(kumulierte_Impfungen = cumsum(Anzahl))
-        
-        HTML(paste(strong("Insgesamt verabreichte Impfungen: "),
+        suppressWarnings(
+            HTML(paste(strong("Insgesamt verabreichte Impfungen: "),
               max(cum_vac$kumulierte_Impfungen)))
+        )
     })
 }
 

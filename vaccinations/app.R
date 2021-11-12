@@ -23,16 +23,25 @@ ui <- fluidPage(
                         label   = strong("Impfort (Landkreis)"),
                         choices = unique(vac_data$LandkreisId_Impfort)),
             
-            checkboxGroupInput("vac_group", 
+            checkboxGroupInput(inputId = "vac_group", 
                                label   = strong("Impfkategorie"),
                                choices = list(
                                    "Erstimpfung"  = 1,
                                    "Zweitimpfung" = 2,
-                                   "Drittimpfung" = 3))
+                                   "Drittimpfung" = 3)),
+            dateRangeInput(inputId   = "date_span",
+                           label     = strong("Zeitraum"),
+                           start     = min(vac_data$Impfdatum),
+                           end       = max(vac_data$Impfdatum),
+                           min       = "2020-12-01",
+                           format    = "dd-M-yyyy",
+                           weekstart = 1,
+                           language  = "de"
+                           )
             ),
         
         mainPanel(
-            plotOutput("vac_plot"),
+            plotOutput("vac_plot", click = "plot_click", hover = "plot_hover"),
             htmlOutput("total_vac"))
     )
 )
@@ -43,6 +52,12 @@ ui <- fluidPage(
 server <- function(input, output) {
         
     output$vac_plot <- renderPlot({
+        
+        
+        
+        
+        
+        
         # keep selected county and selected Groups    
         plot_df <- 
             vac_data %>% 
@@ -65,25 +80,33 @@ server <- function(input, output) {
         ggplot(plot_df, mapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
             geom_line(aes(color = Impfschutz)) +
             scale_color_manual(values = custom_cols, labels = custom_labs) +
-            labs(x = "Datum", y = "Gesamtimpfungen seit Beginn") +
+            labs(caption = "x-Achse: Monat 
+y-Achse: Gesamtimpfungen seit Beginn",
+                 x = "", y = "") +
             scale_y_continuous(
                 labels   = function(x) format(x, scientific = FALSE),
                 n.breaks = 5) +
-            scale_x_date(date_breaks = "1 month", date_labels = "%b")
+            scale_x_date(date_breaks = "2 month", date_labels = "%b")+
+            theme(axis.text.y  = element_text(face = "bold", size = 13),
+                  axis.text.x  = element_text(face = "bold", size = 13),
+                  plot.caption = element_text(hjust = 0, size = 10))
         
     })
         
     output$total_vac <- renderUI({
         # Print out the total number of admin. vaccines. 
+        date_start <- as.Date(input$date_span[1])
         cum_vac <- 
             vac_data %>% 
             filter(LandkreisId_Impfort %in% input$county_id,
                    Impfschutz          %in% input$vac_group) %>%
             mutate(kumulierte_Impfungen = cumsum(Anzahl))
         suppressWarnings(
-            HTML(paste(strong("Insgesamt verabreichte Impfungen: "),
+            HTML(paste(strong("Insgesamt verabreichte Impfungen im Zeitraum: "),
               max(cum_vac$kumulierte_Impfungen)))
         )
+        
+        
     })
 }
 

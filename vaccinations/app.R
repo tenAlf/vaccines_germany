@@ -4,6 +4,7 @@
 library(shiny)
 library(readr)
 library(tidyverse)
+library(ggiraph)
 
 # Get Data ----------------------------------------------------------------
 
@@ -41,8 +42,8 @@ ui <- fluidPage(
             ),
         
         mainPanel(
-            plotOutput("vac_plot", click = "plot_click", hover = "plot_hover"),
-            htmlOutput("total_vac"))
+            plotOutput("vacplot"),
+            tableOutput("total_vac"))
     )
 )
 
@@ -52,7 +53,7 @@ ui <- fluidPage(
 server <- 
     function(input, output) {
         
-    output$vac_plot <- 
+    output$vacplot <- 
         renderPlot({
         # prepare date range values
         date_start <- 
@@ -84,13 +85,12 @@ server <-
               "2" = "#FFC107", 
               "3" = "#1E88E5")
         custom_cap <- 
-            c("x-Achse: Monat \ny-Achse: Gesamtimpungen im Zeitraum")
+            c("x-Achse: Monat \ny-Achse: Gesamtimpfungen im Zeitraum")
         
         # draw the graph
         vac_plot_spec <- 
             ggplot(data = plot_df, 
-               mapping = aes(Impfdatum, Gesamtimpfungen_seit_Beginn)) +
-            
+               mapping = aes(x = Impfdatum, y = Gesamtimpfungen_seit_Beginn)) +
             scale_color_manual(values = custom_cols, 
                                labels = custom_labs) +
             labs(caption = custom_cap, 
@@ -112,19 +112,32 @@ server <-
         } else {
             vac_plot <- 
                 vac_plot_spec + geom_line(aes(color = Impfschutz))
+            
         }
+        
         vac_plot
             
         
     })
     
     # Print out the total number of admin. vaccines.    
-    output$total_vac <- renderUI({
+    output$total_vac <- renderTable({
          
         
         # prepare date range
         date_start <- as.Date(input$date_span[1])
         date_end   <- as.Date(input$date_span[2])
+        
+        # Prepare value change for readability
+        name_change <- 
+            function(x){
+                case_when(
+                    x == 1 ~ "Erstimpfung",
+                    x == 2 ~ "Zweitimpfung",
+                    x == 3 ~ "Drittimpfung")
+            }
+        
+        
         
         # prepare data for the output
         cum_vac <- 
@@ -132,15 +145,35 @@ server <-
             filter(LandkreisId_Impfort %in% input$county_id,
                    Impfschutz          %in% input$vac_group,
                    between(Impfdatum, date_start, date_end)) %>%
-            mutate(kumulierte_Impfungen = cumsum(Anzahl))
+            mutate(Kategorie = "Alle",
+                   kumulierte_Impfungen = cumsum(Anzahl)) %>% 
+            select(Kategorie, 
+                   "Summe Impfungen im Zeitraum" = kumulierte_Impfungen) %>% 
+            slice_tail()
         
+        cum_vac_grouped <- 
+            vac_data %>% 
+            filter(LandkreisId_Impfort %in% input$county_id,
+                   Impfschutz          %in% input$vac_group,
+                   between(Impfdatum, date_start, date_end)) %>%
+            mutate(Impfschutz = name_change(Impfschutz)) %>% 
+            group_by(Impfschutz) %>% 
+            summarise(kumulierte_Impfungen = cumsum(Anzahl), 
+                      .groups              = "keep") %>% 
+            select(Kategorie = Impfschutz,
+                   "Summe Impfungen im Zeitraum" = kumulierte_Impfungen) %>% 
+            slice_tail()
+            
         # Message to print
         suppressWarnings(
-            HTML(paste(strong("Insgesamt verabreichte Impfungen im Zeitraum: "),
-              max(cum_vac$kumulierte_Impfungen)))
-        )
-        
-        
+            bind_rows(cum_vac, cum_vac_grouped) %>% 
+            arrange((factor(Kategorie, 
+                            levels = c("Alle", 
+                                       "Erstimpfung", 
+                                       "Zweitimpfung", 
+                                       "Drittimpfung"))))
+            )
+                   
     })
 }
 

@@ -173,7 +173,6 @@ server <-
                                        "Zweitimpfung", 
                                        "Drittimpfung"))))
             )
-                   
     })
 }
 

@@ -4,8 +4,6 @@
 library(shiny)
 library(readr)
 library(tidyverse)
-library(ggiraph)
-
 # Get Data ----------------------------------------------------------------
 
 source("data_prep.R")
@@ -29,7 +27,8 @@ ui <- fluidPage(
                                choices = list(
                                    "Erstimpfung"  = 1,
                                    "Zweitimpfung" = 2,
-                                   "Drittimpfung" = 3)),
+                                   "Drittimpfung" = 3),
+                               selected = c(1, 2, 3)),
             dateRangeInput(inputId   = "date_span",
                            label     = strong("Zeitraum"),
                            start     = min(vac_data$Impfdatum),
@@ -99,8 +98,6 @@ server <-
             scale_y_continuous(
                 labels   = function(x) format(x, scientific = FALSE),
                 n.breaks = 5) +
-            scale_x_date(date_breaks = "2 month", 
-                         date_labels = "%b")+
             theme(axis.text.y  = element_text(face = "bold", size = 13),
                   axis.text.x  = element_text(face = "bold", size = 13),
                   plot.caption = element_text(hjust = 0, size = 10))
@@ -173,7 +170,6 @@ server <-
                                        "Zweitimpfung", 
                                        "Drittimpfung"))))
             )
-                   
     })
 }
 

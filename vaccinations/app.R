@@ -7,6 +7,7 @@ library(tidyverse)
 # Get Data ----------------------------------------------------------------
 
 source("data_prep.R")
+link <- '<a href="https://github.com/tenAlf/vaccines_germany">GitHub</a>'
 
 # Define UI for county selection and group variables ----------------------
 
@@ -41,9 +42,13 @@ ui <- fluidPage(
             ),
         
         mainPanel(
-            plotOutput("vacplot"),
+            plotOutput("vacplot", width = "100%"),
             tableOutput("total_vac"))
-    )
+        
+        
+    ),
+    hr(),
+    HTML(paste0("Projektbeschreibung und Quellenverweise auf ", link))
 )
 
 
@@ -100,7 +105,9 @@ server <-
                 n.breaks = 5) +
             theme(axis.text.y  = element_text(face = "bold", size = 13),
                   axis.text.x  = element_text(face = "bold", size = 13),
-                  plot.caption = element_text(hjust = 0, size = 10))
+                  plot.caption = element_text(hjust = 0, size = 10),
+                  legend.text  = element_text(size = 12),
+                  legend.title = element_text(size = 12.5))
             
         if(col_line_condition == TRUE) {
             vac_plot <- 

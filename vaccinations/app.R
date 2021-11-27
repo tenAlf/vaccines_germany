@@ -44,57 +44,45 @@ ui <- fluidPage(
         mainPanel(
             plotOutput("vacplot", width = "100%"),
             tableOutput("total_vac"))
-        
-        
     ),
-    hr(),
-    HTML(paste0("Projektbeschreibung und Quellenverweise auf ", link))
+      hr(),
+      HTML(paste0("Letzte Datenaktualisierung: ", last_update)),
+      br(),
+      HTML(paste0("Projektbeschreibung und Quellenverweise auf ", link))
 )
-
-
 
 # Define server logic for displaying a cumulative plot --------------------
 server <- 
     function(input, output) {
-        
     output$vacplot <- 
         renderPlot({
         # prepare date range values
-        date_start <- 
+        date_start <-
             as.Date(input$date_span[1])
-        date_end   <- 
+        date_end   <-
             as.Date(input$date_span[2])
-        col_line_condition <- 
+            
+        col_line_condition <-
             as.numeric(difftime(date_start, date_end, units = "days")) == 0
         
-        # keep selected county and selected Groups within date range    
-        plot_df <- 
-            vac_data %>% 
-            filter(LandkreisId_Impfort %in% input$county_id,
-                   Impfschutz          %in% input$vac_group,
-                   between(Impfdatum, date_start, date_end)) %>% 
-        # generate grouped cumsum based on checkboxInputs from ui.R
-            group_by(Impfdatum, Impfschutz) %>% 
+        # keep selected county and selected Groups within date range
+        plot_df <-
+            vac_data %>%
+            filter(
+                LandkreisId_Impfort %in% input$county_id,
+                Impfschutz          %in% input$vac_group,
+                between(Impfdatum, date_start, date_end)) %>%
+            # generate grouped cumsum based on checkboxInputs from ui.R
+            group_by(Impfdatum, Impfschutz) %>%
             summarise(Impfungen_am_Tag = sum(Anzahl), .groups = "drop") %>%
-            group_by(Impfschutz) %>% 
+            group_by(Impfschutz) %>%
             mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
         
-        # some custom strings for labs and captions
-        custom_labs <- 
-            c("1" = "Erstimpfung", 
-              "2" = "Zweitimpfung", 
-              "3" = "Drittimpfung")
-        custom_cols <- 
-            c("1" = "#D81B60", 
-              "2" = "#FFC107", 
-              "3" = "#1E88E5")
-        custom_cap <- 
-            c("x-Achse: Monat \ny-Achse: Gesamtimpfungen im Zeitraum")
         
-        # draw the graph
+        # prep the graph
         vac_plot_spec <- 
             ggplot(data = plot_df, 
-               mapping = aes(x = Impfdatum, y = Gesamtimpfungen_seit_Beginn)) +
+                mapping = aes(x = Impfdatum, y = Gesamtimpfungen_seit_Beginn)) +
             scale_color_manual(values = custom_cols, 
                                labels = custom_labs) +
             labs(caption = custom_cap, 
@@ -108,7 +96,7 @@ server <-
                   plot.caption = element_text(hjust = 0, size = 10),
                   legend.text  = element_text(size = 12),
                   legend.title = element_text(size = 12.5))
-            
+        
         if(col_line_condition == TRUE) {
             vac_plot <- 
                 vac_plot_spec + geom_col(aes(fill   = Impfschutz), 
@@ -118,19 +106,21 @@ server <-
                 vac_plot_spec + geom_line(aes(color = Impfschutz))
             
         }
-        
+
+        # draw the graph
         vac_plot
             
         
     })
     
-    # Print out the total number of admin. vaccines.    
+    # Print out the total number of admin. vaccines in timespan.   
     output$total_vac <- renderTable({
          
-        
         # prepare date range
-        date_start <- as.Date(input$date_span[1])
-        date_end   <- as.Date(input$date_span[2])
+        date_start <- 
+            as.Date(input$date_span[1])
+        date_end   <- 
+            as.Date(input$date_span[2])
         
         # Prepare value change for readability
         name_change <- 
@@ -140,8 +130,6 @@ server <-
                     x == 2 ~ "Zweitimpfung",
                     x == 3 ~ "Drittimpfung")
             }
-        
-        
         
         # prepare data for the output
         cum_vac <- 

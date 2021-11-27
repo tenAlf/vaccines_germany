@@ -27,14 +27,15 @@ vac_data <- # Make sure the table is correctly sorted
   arrange(LandkreisId_Impfort, Impfdatum) 
 
 # load the county-id information aquiered from regionalstatistik.de
-suppressMessages(
-ags_data <- 
-  read_csv2("ext_data/ags.csv", 
-            locale = locale("de", encoding = "ISO-8859-1"), 
-            skip = 6,
-            col_names = c("date", "county_id", "county", "size"),
+suppressWarnings(
+  suppressMessages(
+  ags_data <- 
+    read_csv2("ext_data/ags.csv", 
+            locale         = locale("de", encoding = "ISO-8859-1"), 
+            skip           = 6,
+            col_names      = c("date", "county_id", "county", "size"),
             show_col_types = FALSE)
-)
+))
 # The following throws a warning due to the very last rows being filled with
 # arbitrary information that doesn't concern us
 suppressWarnings(
@@ -85,4 +86,19 @@ vac_data <- # extend vac_data with county name
 
 
 
+# create a set of custom labels and captions for later use
+custom_labs <- 
+  c("1" = "Erstimpfung", 
+    "2" = "Zweitimpfung", 
+    "3" = "Drittimpfung")
+custom_cols <- 
+  c("1" = "#D81B60", 
+    "2" = "#FFC107", 
+    "3" = "#1E88E5")
+custom_cap <- 
+  c("x-Achse: Monat \ny-Achse: Gesamtimpfungen im Zeitraum")
 
+
+# Get the last Update Date ------------------------------------------------
+
+source("update_date.R")

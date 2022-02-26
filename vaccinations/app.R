@@ -4,6 +4,7 @@
 library(shiny)
 library(readr)
 library(tidyverse)
+library(plotly)
 # Get Data ----------------------------------------------------------------
 
 source("data_prep.R")
@@ -42,7 +43,7 @@ ui <- fluidPage(
             ),
         
         mainPanel(
-            plotOutput("vacplot", width = "100%"),
+            plotlyOutput("vacplot", width = "100%"),
             tableOutput("total_vac"))
     ),
       hr(),
@@ -55,7 +56,7 @@ ui <- fluidPage(
 server <- 
     function(input, output) {
     output$vacplot <- 
-        renderPlot({
+        renderPlotly({
         # prepare date range values
         date_start <-
             as.Date(input$date_span[1])
@@ -82,20 +83,24 @@ server <-
         # prep the graph
         vac_plot_spec <- 
             ggplot(data = plot_df, 
-                mapping = aes(x = Impfdatum, y = Gesamtimpfungen_seit_Beginn)) +
-            scale_color_manual(values = custom_cols, 
-                               labels = custom_labs) +
-            labs(caption = custom_cap, 
-                 x       = "", 
-                 y       = "") +
-            scale_y_continuous(
-                labels   = function(x) format(x, scientific = FALSE),
-                n.breaks = 5) +
-            theme(axis.text.y  = element_text(face = "bold", size = 13),
-                  axis.text.x  = element_text(face = "bold", size = 13),
-                  plot.caption = element_text(hjust = 0, size = 10),
-                  legend.text  = element_text(size = 12),
-                  legend.title = element_text(size = 12.5))
+                mapping = aes(
+                  x     = Impfdatum, 
+                  y     = Gesamtimpfungen_seit_Beginn,
+                  label = Impfungen_am_Tag)) +
+            scale_color_manual(
+              values = custom_cols, 
+              labels = custom_labs) +
+            labs(
+              caption = custom_cap, 
+              x       = "", 
+              y       = "") +
+            
+            theme(
+              axis.text.y  = element_text(face = "bold", size = 13), 
+              axis.text.x  = element_text(face = "bold", size = 13),
+              plot.caption = element_text(hjust = 0, size = 10),
+              legend.text  = element_text(size = 12),
+              legend.title = element_text(size = 12.5))
         
         if(col_line_condition == TRUE) {
             vac_plot <- 
@@ -108,7 +113,11 @@ server <-
         }
 
         # draw the graph
-        vac_plot
+        ggplotly(vac_plot, 
+                 dynamicTicks = TRUE, 
+                 tooltip = c("Impfdatum", 
+                             "Impfungen_am_Tag", 
+                             "Gesamtimpfungen_seit_Beginn"))
             
         
     })

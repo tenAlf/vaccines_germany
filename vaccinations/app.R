@@ -29,8 +29,9 @@ ui <- fluidPage(
                                choices = list(
                                    "Erstimpfung"  = 1,
                                    "Zweitimpfung" = 2,
-                                   "Drittimpfung" = 3),
-                               selected = c(1, 2, 3)),
+                                   "Drittimpfung" = 3,
+                                   "Viertimpfung" = 4),
+                               selected = c(1, 2, 3, 4)),
             dateRangeInput(inputId   = "date_span",
                            label     = strong("Zeitraum"),
                            start     = min(vac_data$Impfdatum),
@@ -55,73 +56,75 @@ ui <- fluidPage(
 # Define server logic for displaying a cumulative plot --------------------
 server <- 
     function(input, output) {
-    output$vacplot <- 
-        renderPlotly({
-        # prepare date range values
+    
+      vac_plot <- 
+       reactive({
         date_start <-
-            as.Date(input$date_span[1])
+          as.Date(input$date_span[1])
         date_end   <-
-            as.Date(input$date_span[2])
-            
-        col_line_condition <-
-            as.numeric(difftime(date_start, date_end, units = "days")) == 0
+          as.Date(input$date_span[2])
+        
+        bar_condition <-
+          date_start == date_end  
+        #as.numeric(difftime(date_start, date_end, units = "days")) == 0
         
         # keep selected county and selected Groups within date range
         plot_df <-
-            vac_data %>%
-            filter(
-                LandkreisId_Impfort %in% input$county_id,
-                Impfschutz          %in% input$vac_group,
-                between(Impfdatum, date_start, date_end)) %>%
-            # generate grouped cumsum based on checkboxInputs from ui.R
-            group_by(Impfdatum, Impfschutz) %>%
-            summarise(Impfungen_am_Tag = sum(Anzahl), .groups = "drop") %>%
-            group_by(Impfschutz) %>%
-            mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
+          vac_data %>%
+          filter(
+            LandkreisId_Impfort %in% input$county_id,
+            Impfschutz          %in% input$vac_group,
+            between(Impfdatum, date_start, date_end)) %>%
+          # generate grouped cumsum based on checkboxInputs from ui.R
+          group_by(Impfdatum, Impfschutz) %>%
+          summarise(Impfungen_am_Tag = sum(Anzahl), .groups = "drop") %>%
+          group_by(Impfschutz) %>%
+          mutate(Gesamtimpfungen_seit_Beginn = cumsum(Impfungen_am_Tag))
         
         
         # prep the graph
         vac_plot_spec <- 
-            ggplot(data = plot_df, 
-                mapping = aes(
-                  x     = Impfdatum, 
-                  y     = Gesamtimpfungen_seit_Beginn,
-                  label = Impfungen_am_Tag)) +
-            scale_color_manual(
-              values = custom_cols, 
-              labels = custom_labs) +
-            labs(
-              caption = custom_cap, 
-              x       = "", 
-              y       = "") +
-            
-            theme(
-              axis.text.y  = element_text(face = "bold", size = 13), 
-              axis.text.x  = element_text(face = "bold", size = 13),
-              plot.caption = element_text(hjust = 0, size = 10),
-              legend.text  = element_text(size = 12),
-              legend.title = element_text(size = 12.5))
+          ggplot(data = plot_df, 
+                 mapping = aes(
+                   x     = Impfdatum, 
+                   y     = Gesamtimpfungen_seit_Beginn,
+                   label = Impfungen_am_Tag)) +
+          scale_color_manual(
+            values = custom_cols, 
+            labels = custom_labs) +
+          labs(
+            caption = custom_cap, 
+            x       = "", 
+            y       = "") +
+          
+          theme(
+            axis.text.y  = element_text(face = "bold", size = 13), 
+            axis.text.x  = element_text(face = "bold", size = 13),
+            plot.caption = element_text(hjust = 0, size = 10),
+            legend.text  = element_text(size = 12),
+            legend.title = element_text(size = 12.5))
         
-        if(col_line_condition == TRUE) {
-            vac_plot <- 
-                vac_plot_spec + geom_col(aes(fill   = Impfschutz), 
-                                         position = "dodge")
+        if(bar_condition == TRUE) {
+          vac_plot_spec + geom_col(aes(fill = Impfschutz))
         } else {
-            vac_plot <- 
-                vac_plot_spec + geom_line(aes(color = Impfschutz))
-            
+          vac_plot_spec + geom_line(aes(color = Impfschutz))
         }
-
-        # draw the graph
-        ggplotly(vac_plot, 
+       
+                                             
+      })
+      
+      output$vacplot <- 
+        renderPlotly({
+          # prepare date range values
+          ggplotly(vac_plot(), 
                  dynamicTicks = TRUE, 
-                 tooltip = c("Impfdatum", 
-                             "Impfungen_am_Tag", 
-                             "Gesamtimpfungen_seit_Beginn"))
-            
-        
+                 tooltip      = c("Impfdatum", 
+                                  "Impfungen_am_Tag", 
+                                  "Gesamtimpfungen_seit_Beginn"))
     })
     
+    
+      
     # Print out the total number of admin. vaccines in timespan.   
     output$total_vac <- renderTable({
          
@@ -137,7 +140,8 @@ server <-
                 case_when(
                     x == 1 ~ "Erstimpfung",
                     x == 2 ~ "Zweitimpfung",
-                    x == 3 ~ "Drittimpfung")
+                    x == 3 ~ "Drittimpfung",
+                    x == 4 ~ "Viertimpfung")
             }
         
         # prepare data for the output
@@ -172,7 +176,8 @@ server <-
                             levels = c("Alle", 
                                        "Erstimpfung", 
                                        "Zweitimpfung", 
-                                       "Drittimpfung"))))
+                                       "Drittimpfung",
+                                       "Viertimpfung"))))
             )
     })
 }

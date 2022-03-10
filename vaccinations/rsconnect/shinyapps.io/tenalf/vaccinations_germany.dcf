@@ -5,9 +5,9 @@ account: tenalf
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5017697
-bundleId: 5319803
+bundleId: 5620405
 url: https://tenalf.shinyapps.io/vaccinations_germany/
-when: 1638461998.80061
-lastSyncTime: 1638461998.80064
+when: 1645878809.84879
+lastSyncTime: 1645878809.84882
 asMultiple: FALSE
 asStatic: FALSE

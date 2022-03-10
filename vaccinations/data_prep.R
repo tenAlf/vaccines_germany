@@ -90,11 +90,13 @@ vac_data <- # extend vac_data with county name
 custom_labs <- 
   c("1" = "Erstimpfung", 
     "2" = "Zweitimpfung", 
-    "3" = "Drittimpfung")
+    "3" = "Drittimpfung",
+    "4" = "Viertimpfung")
 custom_cols <- 
   c("1" = "#D81B60", 
     "2" = "#FFC107", 
-    "3" = "#1E88E5")
+    "3" = "#1E88E5",
+    "4" = "#10CCB6")
 custom_cap <- 
   c("x-Achse: Monat \ny-Achse: Gesamtimpfungen im Zeitraum")
 

@@ -45,14 +45,11 @@ day is selected. In this case a simple bar plot is drawn (one column per
 category). Below the graph a table summarises the end sum of
 vaccinations per chosen category in the selected period.
 
-# Future Plans
 
-In the future it’s planned to extend the user input possibilities and
-allow for the selection of different age groups. Also a text field
-informing about the last update-date of the vaccination-data would
-increase reliability. Another possible future idea would be to look
-beyond ggplot as the main plot engine and try another more interactive
-solution (e.g. dygraphs).
+# Known Bugs
+Currently the change to a single day visualisation produces a confusing graph
+with a terrible x-axis and buggy legend. The data in the table and in the tooltip 
+are correct though.
 
 # References
 

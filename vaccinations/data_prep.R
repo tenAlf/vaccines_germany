@@ -6,9 +6,9 @@ library(tidyverse)
 
 # get the newest Data from the RKI github repo
 data_url <- 
-  paste0("https://raw.githubusercontent.com",
-         "/robert-koch-institut/COVID-19-Impfungen_in_Deutschland",
-         "/master/Aktuell_Deutschland_Landkreise_COVID-19-Impfungen.csv")
+  paste0("https://raw.githubusercontent.com/",
+         "robert-koch-institut/COVID-19-Impfungen_in_Deutschland/",
+         "main/Deutschland_Landkreise_COVID-19-Impfungen.csv")
 
 vac_data <-
   read_csv(
@@ -62,7 +62,7 @@ extend_string <- # helper to extend short ids by a 0 to match the id in vac_data
     } 
     x
   }
-check_length <- # helper for the prediction in modify
+check_length <- # helper for the detecting to short strings
   function(x) if_else(str_length(x) < 5, TRUE, FALSE)
 
 # Now correct too short ids and let's also keep only the county name and remove
@@ -71,7 +71,11 @@ ags_data <-
   ags_data %>% 
   mutate(
     county_id = modify_if(county_id, check_length, extend_string),
-    county = str_remove_all(ags_data$county, ", .*"))
+    county = str_remove_all(ags_data$county, ", .*")) %>% 
+  # Add id 17000 for federal goverment institutions
+  bind_rows(
+    tibble(county_id = "17000", county = "Bundesressorts")
+  )
 
 
 
@@ -82,21 +86,27 @@ vac_data <- # extend vac_data with county name
   # combine the ID and name for the search later in the App)
   mutate(LandkreisId_Impfort = modify2(LandkreisId_Impfort, 
                                        county, 
-                                       ~ paste0(.x, " (", .y, ")")))
-
-
+                                       ~ paste0(.x, " (", .y, ")"))) %>% 
+  # To not bloat the ui with selectors, aggregate the Impfschutz variable for 5+
+  # shots. 
+  mutate(
+    Impfschutz = if_else(as.numeric(Impfschutz) >= 5, "5+", as.character(Impfschutz)),
+    Impfschutz = as_factor(Impfschutz)
+  ) 
 
 # create a set of custom labels and captions for later use
 custom_labs <- 
-  c("1" = "Erstimpfung", 
-    "2" = "Zweitimpfung", 
-    "3" = "Drittimpfung",
-    "4" = "Viertimpfung")
+  c("1"  = "Erstimpfung", 
+    "2"  = "Zweitimpfung", 
+    "3"  = "Drittimpfung",
+    "4"  = "Viertimpfung",
+    "5+" = ">4 Impfungen")
 custom_cols <- 
-  c("1" = "#D81B60", 
-    "2" = "#FFC107", 
-    "3" = "#1E88E5",
-    "4" = "#10CCB6")
+  c("1"  = "#D81B60", 
+    "2"  = "#FFC107", 
+    "3"  = "#1E88E5",
+    "4"  = "#10CCB6",
+    "5+" = "#66687F")
 custom_cap <- 
   c("x-Achse: Monat \ny-Achse: Gesamtimpfungen im Zeitraum")
 

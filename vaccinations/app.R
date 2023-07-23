@@ -5,10 +5,11 @@ library(shiny)
 library(readr)
 library(tidyverse)
 library(plotly)
+
 # Get Data ----------------------------------------------------------------
 
 source("data_prep.R")
-link <- '<a href="https://github.com/tenAlf/vaccines_germany">GitHub</a>'
+my_page <- '<a href="https://github.com/tenAlf/vaccines_germany">GitHub</a>'
 
 # Define UI for county selection and group variables ----------------------
 
@@ -27,10 +28,12 @@ ui <- fluidPage(
             checkboxGroupInput(inputId = "vac_group", 
                                label   = strong("Impfkategorie"),
                                choices = list(
-                                   "Erstimpfung"  = 1,
-                                   "Zweitimpfung" = 2,
-                                   "Drittimpfung" = 3,
-                                   "Viertimpfung" = 4),
+                                   "Erstimpfung"  = "1",
+                                   "Zweitimpfung" = "2",
+                                   "Drittimpfung" = "3",
+                                   "Viertimpfung" = "4",
+                                   ">4 Impfungen" = "5+"
+                                   ),
                                selected = c(1, 2, 3, 4)),
             dateRangeInput(inputId   = "date_span",
                            label     = strong("Zeitraum"),
@@ -50,7 +53,7 @@ ui <- fluidPage(
       hr(),
       HTML(paste0("Letzte Datenaktualisierung: ", last_update)),
       br(),
-      HTML(paste0("Projektbeschreibung und Quellenverweise auf ", link))
+      HTML(paste0("Projektbeschreibung und Quellenverweise auf ", my_page))
 )
 
 # Define server logic for displaying a cumulative plot --------------------
@@ -66,7 +69,6 @@ server <-
         
         bar_condition <-
           date_start == date_end  
-        #as.numeric(difftime(date_start, date_end, units = "days")) == 0
         
         # keep selected county and selected Groups within date range
         plot_df <-
@@ -138,10 +140,11 @@ server <-
         name_change <- 
             function(x){
                 case_when(
-                    x == 1 ~ "Erstimpfung",
-                    x == 2 ~ "Zweitimpfung",
-                    x == 3 ~ "Drittimpfung",
-                    x == 4 ~ "Viertimpfung")
+                    x == 1    ~ "Erstimpfung",
+                    x == 2    ~ "Zweitimpfung",
+                    x == 3    ~ "Drittimpfung",
+                    x == 4    ~ "Viertimpfung",
+                    x == "5+" ~ ">4 Impfungen")
             }
         
         # prepare data for the output
@@ -177,7 +180,8 @@ server <-
                                        "Erstimpfung", 
                                        "Zweitimpfung", 
                                        "Drittimpfung",
-                                       "Viertimpfung"))))
+                                       "Viertimpfung",
+                                       ">4 Impfungen"))))
             )
     })
 }

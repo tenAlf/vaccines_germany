@@ -2,17 +2,14 @@
 # Setup -------------------------------------------------------------------
 
 url_for_date <- 
-  paste0("https://github.com/robert-koch-institut",
-         "/COVID-19-Impfungen_in_Deutschland/blob/master/",
-         "Aktuell_Deutschland_Landkreise_COVID-19-Impfungen.csv")
+  paste0("https://raw.githubusercontent.com/",
+         "robert-koch-institut/COVID-19-Impfungen_in_Deutschland/",
+         "main/Metadaten/zenodo.json")
 
 
-# Read Page and extract Date ----------------------------------------------
+
+# Grab the meta file and find the last update -----------------------------
 
 last_update <- 
-  rvest::session(url_for_date) %>% 
-  rvest::html_nodes("relative-time") %>% 
-  rvest::html_attr("datetime") %>% 
-  lubridate::as_datetime() %>% 
-  lubridate::with_tz("Europe/Berlin")
-  
+  jsonlite::fromJSON(url_for_date)$version
+

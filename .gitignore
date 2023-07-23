@@ -3,4 +3,6 @@
 .RData
 .Ruserdata
 .initial_fooling_around.R
+test/app.R
+vaccinations/rsconnect/
 test.R
